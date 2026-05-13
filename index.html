@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Sphere Gallery + Mini Game</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+body{
+  overflow:hidden;
+  background:
+  radial-gradient(circle at center,
+  #1d1d1d 0%,
+  #070707 60%,
+  #000 100%);
+  font-family:Arial,sans-serif;
+}
+
+img{
+  pointer-events:none;
+  user-drag:none;
+  -webkit-user-drag:none;
+}
+
+#scene{
+  width:100vw;
+  height:100vh;
+  position:relative;
+  overflow:hidden;
+  cursor:grab;
+}
+
+#scene:active{
+  cursor:grabbing;
+}
+
+.card{
+  position:absolute;
+  border-radius:20px;
+  overflow:hidden;
+
+  border:1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+  0 12px 30px rgba(0,0,0,0.5);
+
+  transition:transform .08s linear;
+
+  background:#111;
+}
+
+.card img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.title{
+  position:absolute;
+
+  top:20px;
+  left:50%;
+
+  transform:translateX(-50%);
+
+  z-index:99999;
+
+  text-align:center;
+
+  color:white;
+
+  pointer-events:none;
+}
+
+.title h1{
+  font-size:48px;
+  letter-spacing:5px;
+}
+
+.title p{
+  margin-top:8px;
+  color:#aaa;
+}
+
+#miniGameBtn{
+  position:absolute;
+
+  top:20px;
+  right:20px;
+
+  z-index:99999;
+
+  border:none;
+
+  padding:12px 20px;
+
+  border-radius:999px;
+
+  cursor:pointer;
+
+  color:white;
+
+  font-weight:bold;
+
+  background:
+  linear-gradient(135deg,
+  #7c3aed,
+  #4f46e5);
+
+  box-shadow:
+  0 0 20px rgba(124,58,237,.4);
+
+  transition:.25s;
+}
+
+#miniGameBtn:hover{
+  transform:scale(1.08);
+}
+
+#gamePanel{
+  position:fixed;
+
+  inset:0;
+
+  display:none;
+
+  align-items:center;
+  justify-content:center;
+
+  background:rgba(0,0,0,.92);
+
+  z-index:999999;
+}
+
+.gameBox{
+  width:92%;
+  max-width:1100px;
+
+  height:92vh;
+
+  background:#121212;
+
+  border-radius:30px;
+
+  padding:18px;
+
+  color:white;
+
+  text-align:center;
+
+  border:
+  1px solid rgba(255,255,255,0.08);
+
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+
+  align-items:center;
+}
+
+.gameBox h2{
+  margin-bottom:20px;
+}
+
+#gameCharacter{
+  width:180px;
+  height:180px;
+
+  border-radius:24px;
+
+  object-fit:cover;
+}
+
+#choices{
+  width:100%;
+
+  margin-top:18px;
+
+  display:grid;
+
+  grid-template-columns:
+  repeat(5,1fr);
+
+  gap:10px;
+}
+
+.choice{
+  padding:10px;
+
+  font-size:14px;
+
+  border-radius:16px;
+
+  cursor:pointer;
+
+  background:rgba(255,255,255,0.08);
+
+  transition:.2s;
+
+  border:1px solid transparent;
+}
+
+.choice:hover{
+  background:rgba(255,255,255,0.16);
+}
+
+.choice.active{
+  border-color:white;
+
+  background:
+  rgba(255,255,255,0.24);
+}
+
+.choice.correct{
+  background:
+  linear-gradient(135deg,#16a34a,#22c55e);
+
+  border-color:#4ade80;
+
+  color:white;
+}
+
+.choice.wrong{
+  background:
+  linear-gradient(135deg,#dc2626,#ef4444);
+
+  border-color:#f87171;
+
+  color:white;
+}
+
+.actions{
+  margin-top:25px;
+
+  display:flex;
+
+  justify-content:center;
+
+  gap:14px;
+}
+
+.actions button{
+  border:none;
+
+  padding:12px 18px;
+
+  border-radius:14px;
+
+  cursor:pointer;
+
+  font-weight:bold;
+
+  color:white;
+
+  transition:.25s;
+}
+
+#submitBtn{
+  background:
+  linear-gradient(135deg,
+  #2563eb,
+  #06b6d4);
+}
+
+#playAgainBtn{
+  background:
+  linear-gradient(135deg,
+  #16a34a,
+  #22c55e);
+}
+
+#exitGameBtn{
+  background:
+  linear-gradient(135deg,
+  #f59e0b,
+  #f97316);
+}
+
+.actions button:hover{
+  transform:scale(1.05);
+}
+
+#lives{
+  margin-top:15px;
+  font-size:28px;
+}
+
+#result{
+  margin-top:20px;
+  font-size:18px;
+}
+
+.footer{
+  position:absolute;
+
+  bottom:15px;
+
+  width:100%;
+
+  text-align:center;
+
+  color:#666;
+}
+@media(max-width:700px){
+
+  .gameBox{
+    padding:18px;
+  }
+
+  .title h1{
+    font-size:32px;
+  }
+
+  #choices{
+    grid-template-columns:
+    repeat(2,1fr);
+  }
+
+  #gameCharacter{
+    width:140px;
+    height:140px;
+  }
+
+  .actions{
+    flex-wrap:wrap;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="title">
+  <h1>Salemaniacs</h1>
+  <p>Family</p>
+</div>
+
+<button id="miniGameBtn">
+🎮 Mini Game
+</button>
+
+<div id="scene"></div>
+
+<div id="gamePanel">
+
+  <div class="gameBox">
+
+    <h2>
+      Đâu là đặc điểm của người trong ảnh?
+    </h2>
+
+    <img id="gameCharacter" src="">
+
+    <div id="lives">
+      ❤️❤️❤️
+    </div>
+
+    <div id="choices"></div>
+
+    <div class="actions">
+
+      <button id="exitGameBtn">
+        Thoát game
+      </button>
+
+      <button id="submitBtn">
+        Submit
+      </button>
+
+      <button id="playAgainBtn"
+      style="display:none">
+
+        Chơi mới
+
+      </button>
+
+    </div>
+
+    <div id="result"></div>
+
+  </div>
+
+</div>
+
+<div class="footer">
+  by fat
+</div>
+
+<script>
+
+const scene =
+document.getElementById('scene');
+
+const images = [
+
+ './images/cun2.jpg',
+ './images/salem1.jpg',
+ './images/cun3.jpg',
+ './images/dat1.jpg',
+ './images/tra1.jpg',
+ './images/cun3.jpg',
+ './images/salem2.jpg',
+ './images/vince1.jpg',
+ './images/tra2.jpg',
+ './images/salem3.jpg',
+ './images/dat2.jpg',
+ './images/dat3.jpg',
+ './images/nin1.jpg',
+ './images/tra3.jpg',
+ './images/tai1.png',
+ './images/tra4.jpg',
+ './images/tai2.jpg',
+ './images/cun4.jpg',
+ './images/cun1.jpg',
+ './images/salem4.jpg',
+ './images/ti1.jpg',
+ './images/ti2.jpg',
+ './images/biu4.jpg',
+ './images/ti3.jpg',
+ './images/biu2.jpg',
+ './images/ti4.jpg',
+ './images/biu1.jpg',
+ './images/dat5.png',
+ './images/biu3.jpg',
+ './images/dat4.jpg'
+
+];
+
+const radius = 250;
+
+let rotationX = -10;
+let rotationY = 0;
+
+let dragging = false;
+
+let lastX = 0;
+let lastY = 0;
+
+const cards = [];
+
+function createCards(){
+
+  images.forEach(src=>{
+
+    const card =
+    document.createElement('div');
+
+    card.className='card';
+
+    const img =
+    document.createElement('img');
+
+    img.src = src;
+
+    card.appendChild(img);
+
+    scene.appendChild(card);
+
+    cards.push(card);
+
+  });
+
+}
+
+function spherePosition(index,total){
+
+  const phi =
+  Math.acos(-1 + (2 * index) / total);
+
+  const theta =
+  Math.sqrt(total * Math.PI) * phi;
+
+  return{
+
+    x:
+    radius *
+    Math.cos(theta) *
+    Math.sin(phi),
+
+    y:
+    radius *
+    Math.sin(theta) *
+    Math.sin(phi),
+
+    z:
+    radius *
+    Math.cos(phi)
+
+  };
+
+}
+
+function rotate(x,y,z,rotX,rotY){
+
+  const radX =
+  rotX * Math.PI / 180;
+
+  const radY =
+  rotY * Math.PI / 180;
+
+  const cosY = Math.cos(radY);
+  const sinY = Math.sin(radY);
+
+  let dx =
+  x * cosY - z * sinY;
+
+  let dz =
+  x * sinY + z * cosY;
+
+  const cosX = Math.cos(radX);
+  const sinX = Math.sin(radX);
+
+  let dy =
+  y * cosX - dz * sinX;
+
+  dz =
+  y * sinX + dz * cosX;
+
+  return{
+    x:dx,
+    y:dy,
+    z:dz
+  };
+
+}
+
+function render(){
+
+  const centerX =
+  window.innerWidth / 2;
+
+  const centerY =
+  window.innerHeight / 2 + 40;
+
+  const mapped = [];
+
+  cards.forEach((card,index)=>{
+
+    const pos =
+    spherePosition(index,cards.length);
+
+    const rot =
+    rotate(
+      pos.x,
+      pos.y,
+      pos.z,
+      rotationX,
+      rotationY
+    );
+
+    const perspective = 900;
+
+    const scale =
+    (rot.z + radius + 200) /
+    (radius * 2 + 200);
+
+    const x2d =
+    (rot.x * perspective) /
+    (perspective - rot.z);
+
+    const y2d =
+    (rot.y * perspective) /
+    (perspective - rot.z);
+
+    const size =
+    45 + scale * 70;
+
+    mapped.push({
+
+      card,
+
+      z:rot.z,
+
+      x:centerX + x2d - size/2,
+
+      y:centerY + y2d - size/2,
+
+      size,
+
+      scale,
+
+      opacity:
+      0.35 + scale * 0.7
+
+    });
+
+  });
+
+  mapped.sort((a,b)=>a.z-b.z);
+
+  mapped.forEach(item=>{
+
+    item.card.style.left =
+    item.x + 'px';
+
+    item.card.style.top =
+    item.y + 'px';
+
+    item.card.style.width =
+    item.size + 'px';
+
+    item.card.style.height =
+    item.size + 'px';
+
+    item.card.style.opacity =
+    item.opacity;
+
+    item.card.style.zIndex =
+    Math.floor(item.z + 1000);
+
+    item.card.style.transform =
+    `scale(${item.scale})`;
+
+  });
+
+  requestAnimationFrame(render);
+
+}
+
+scene.addEventListener('mousedown',e=>{
+
+  dragging = true;
+
+  lastX = e.clientX;
+  lastY = e.clientY;
+
+});
+
+window.addEventListener('mouseup',()=>{
+
+  dragging = false;
+
+});
+
+window.addEventListener('mousemove',e=>{
+
+  if(!dragging) return;
+
+  const dx =
+  e.clientX - lastX;
+
+  const dy =
+  e.clientY - lastY;
+
+  rotationY -= dx * 0.35;
+  rotationX -= dy * 0.35;
+
+  lastX = e.clientX;
+  lastY = e.clientY;
+
+});
+
+createCards();
+
+render();
+
+const characters = [
+
+ {
+   image:'./images/biu3.jpg',
+   traits:[
+    'Hay cọc',
+    'Thích N',
+    'Thích game'
+   ]
+ },
+
+ {
+   image:'./images/cun2.jpg',
+   traits:[
+    'Siêu máy rung',
+    'can i join',
+    'chan em đi'
+   ]
+ },
+
+ {
+   image:'./images/tra2.jpg',
+   traits:[
+    'Hay Dỗi',
+    'Cho iu với',
+    'Thợ Chăn Bò'
+   ]
+ }
+ ,
+
+ {
+   image:'./images/salem3.jpg',
+   traits:[
+    'Đa Dạng Tuổi',
+    'Vua nối từ',
+    'Gây chiến với mọi member'
+   ]
+ }
+ ,
+
+ {
+   image:'./images/ti2.jpg',
+   traits:[
+    'Chấn Bé Đù',
+    'Musician',
+    'Hướng Về Nước Đức'
+   ]
+ },
+
+ {
+   image:'./images/nin1.jpg',
+   traits:[
+    'Thích B',
+    'Hát Hay Nhất sẻ vẻ',
+    'Vua lì đòn'
+   ]
+ },
+
+ {
+   image:'./images/dat5.png',
+   traits:[
+    'Vua nổ hủ',
+    'em lan em ngọc em nào cũng thích',
+    'Con Chó'
+   ]
+ },
+
+ {
+   image:'./images/tai2.jpg',
+   traits:[
+    'Có gu nhất sẻ vẻ',
+    'Chồng quốc dân',
+    'Vua của những chiếc sừng'
+   ]
+ }
+ 
+
+];
+
+const allTraits = [
+
+ 'Hay cọc',
+ 'Thích N',
+ 'Thích game',
+ 'Siêu máy rung',
+ 'can i join',
+ 'chan em đi',
+ 'Hay Dỗi',
+ 'Cho iu với',
+ 'Thợ Chăn Bò',
+ 'Đa Dạng Tuổi',
+ 'Vua nối từ',
+ 'Gây chiến với mọi member',
+ 'Chấn Bé Đù',
+ 'Musician',
+ 'Hướng Về Nước Đức',
+ 'Thích B',
+ 'Hát Hay Nhất sẻ vẻ',
+ 'Vua lì đòn',
+ 'Vua nổ hủ',
+ 'em lan em ngọc em nào cũng thích',
+ 'Con Chó',
+ 'Có gu nhất sẻ vẻ',
+ 'Chồng quốc dân',
+ 'Vua của những chiếc sừng'
+
+].sort(() => Math.random() - 0.5);
+
+const miniGameBtn =
+document.getElementById(
+'miniGameBtn'
+);
+
+const gamePanel =
+document.getElementById(
+'gamePanel'
+);
+
+const gameCharacter =
+document.getElementById(
+'gameCharacter'
+);
+
+const choices =
+document.getElementById(
+'choices'
+);
+
+const result =
+document.getElementById(
+'result'
+);
+
+const submitBtn =
+document.getElementById(
+'submitBtn'
+);
+
+const playAgainBtn =
+document.getElementById(
+'playAgainBtn'
+);
+
+const exitGameBtn =
+document.getElementById(
+'exitGameBtn'
+);
+
+const livesDiv =
+document.getElementById(
+'lives'
+);
+
+let currentCharacter = null;
+
+let selected = [];
+
+let lives = 3;
+
+function updateLives(){
+
+  livesDiv.innerHTML =
+  '❤️'.repeat(lives);
+
+}
+
+function loseHeartEffect(){
+
+  livesDiv.animate([
+
+    {
+      transform:'scale(1)'
+    },
+
+    {
+      transform:'scale(1.5)',
+      filter:
+      'drop-shadow(0 0 18px red)'
+    },
+
+    {
+      transform:'scale(1)'
+    }
+
+  ],{
+    duration:500
+  });
+
+  document.body.animate([
+
+    {transform:'translateX(0px)'},
+
+    {transform:'translateX(-8px)'},
+
+    {transform:'translateX(8px)'},
+
+    {transform:'translateX(-4px)'},
+
+    {transform:'translateX(0px)'}
+
+  ],{
+    duration:300
+  });
+
+}
+
+function startGame(){
+
+  selected = [];
+
+  result.innerHTML='';
+
+  submitBtn.style.display=
+  'inline-block';
+
+  playAgainBtn.style.display=
+  'none';
+
+  currentCharacter =
+
+  characters[
+    Math.floor(
+      Math.random() *
+      characters.length
+    )
+  ];
+
+  gameCharacter.src =
+  currentCharacter.image;
+
+  choices.innerHTML='';
+
+  allTraits.forEach(trait=>{
+
+    const div =
+    document.createElement('div');
+
+    div.className='choice';
+
+    div.innerText=trait;
+
+    div.onclick=()=>{
+
+      if(
+      div.classList.contains(
+      'active'
+      )){
+
+        div.classList.remove(
+        'active'
+        );
+
+        selected =
+        selected.filter(
+          t=>t!==trait
+        );
+
+      }else{
+
+        if(selected.length >= 3)
+        return;
+
+        div.classList.add(
+        'active'
+        );
+
+        selected.push(trait);
+
+      }
+
+    };
+
+    choices.appendChild(div);
+
+  });
+
+  updateLives();
+
+}
+
+miniGameBtn.onclick=()=>{
+
+  gamePanel.style.display='flex';
+
+  lives = 3;
+
+  startGame();
+
+};
+
+submitBtn.onclick=()=>{
+
+  const correct =
+  currentCharacter.traits;
+
+  if(selected.length !== 3){
+
+  result.innerHTML =
+  '⚠️ Hãy chọn đủ 3 đáp án';
+
+  return;
+}
+
+  const choiceElements =
+  document.querySelectorAll('.choice');
+
+  choiceElements.forEach(choice=>{
+
+    const text =
+    choice.innerText;
+
+    choice.classList.remove(
+      'correct',
+      'wrong'
+    );
+
+    if(selected.includes(text)){
+
+  if(correct.includes(text)){
+
+    choice.classList.add(
+      'correct'
+    );
+
+    choice.innerHTML =
+      `✅ ${text}`;
+
+  }else{
+
+  choice.classList.add(
+    'wrong'
+  );
+
+  choice.classList.remove(
+    'active'
+  );
+
+  selected = selected.filter(
+    t => t !== text
+  );
+
+  choice.innerHTML =
+    `❌ ${text}`;
+
+}
+
+}
+
+    if(
+      selected.includes(text) &&
+      !correct.includes(text)
+    ){
+
+      choice.classList.add(
+        'wrong'
+      );
+
+      choice.innerHTML =
+      `❌ ${text}`;
+
+    }
+
+  });
+
+  const isCorrect =
+
+  selected.length === 3 &&
+
+  selected.every(
+    t=>correct.includes(t)
+  );
+
+  if(isCorrect){
+
+    result.innerHTML =
+    '✅ Chính xác!';
+
+    submitBtn.style.display=
+    'none';
+
+    playAgainBtn.style.display=
+    'inline-block';
+
+  }else{
+
+    lives--;
+
+    updateLives();
+
+    loseHeartEffect();
+
+    result.innerHTML =
+    '❌ Sai rồi, mất 1 tym 💔';
+
+    if(lives <= 0){
+
+      result.innerHTML =
+      '☠️ Hết tym';
+
+      submitBtn.style.display=
+      'none';
+
+      playAgainBtn.style.display=
+      'inline-block';
+
+    }
+
+  }
+
+};
+
+playAgainBtn.onclick=()=>{
+
+  lives = 3;
+
+  startGame();
+
+};
+
+exitGameBtn.onclick=()=>{
+
+  gamePanel.style.display='none';
+
+};
+
+</script>
+
+</body>
+</html>
