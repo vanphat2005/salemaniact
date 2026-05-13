@@ -442,6 +442,10 @@ touch-action:auto;
   }
 
 }
+.locked{
+  opacity:.45;
+  pointer-events:none;
+}
 
 .topArea{
 
@@ -1032,10 +1036,10 @@ function startGame(){
 
   result.innerHTML='';
 
-  submitBtn.style.display=
+  submitBtn.style.display =
   'inline-block';
 
-  playAgainBtn.style.display=
+  playAgainBtn.style.display =
   'none';
 
   currentCharacter =
@@ -1059,22 +1063,37 @@ function startGame(){
 
     div.className='choice';
 
-    div.innerText=trait;
+    div.innerText = trait;
 
-    div.onclick=()=>{
+    div.dataset.trait = trait;
+
+    div.onclick = ()=>{
 
       if(
-      div.classList.contains(
-      'active'
-      )){
+        div.classList.contains(
+          'locked'
+        )
+      ) return;
+
+      if(
+        div.classList.contains(
+          'correct'
+        )
+      ) return;
+
+      if(
+        div.classList.contains(
+          'active'
+        )
+      ){
 
         div.classList.remove(
-        'active'
+          'active'
         );
 
         selected =
         selected.filter(
-          t=>t!==trait
+          t => t !== trait
         );
 
       }else{
@@ -1083,7 +1102,7 @@ function startGame(){
         return;
 
         div.classList.add(
-        'active'
+          'active'
         );
 
         selected.push(trait);
@@ -1110,100 +1129,110 @@ miniGameBtn.onclick=()=>{
 
 };
 
-submitBtn.onclick=()=>{
+submitBtn.onclick = ()=>{
 
   const correct =
   currentCharacter.traits;
 
   if(selected.length !== 3){
 
-  result.innerHTML =
-  '⚠️ Hãy chọn đủ 3 đáp án';
+    result.innerHTML =
+    '⚠️ Hãy chọn đủ 3 đáp án';
 
-  return;
-}
+    return;
+
+  }
 
   const choiceElements =
   document.querySelectorAll('.choice');
 
+  let wrongCount = 0;
+
   choiceElements.forEach(choice=>{
 
     const text =
-    choice.innerText;
-
-    choice.classList.remove(
-      'correct',
-      'wrong'
-    );
+    choice.dataset.trait;
 
     if(selected.includes(text)){
 
-  if(correct.includes(text)){
+      if(correct.includes(text)){
 
-    choice.classList.add(
-      'correct'
-    );
+        // nếu đã đúng trước đó thì bỏ qua
+        if(
+          !choice.classList.contains(
+            'correct'
+          )
+        ){
 
-    choice.innerHTML =
-      `✅ ${text}`;
+          choice.classList.remove(
+            'active'
+          );
 
-  }else{
+          choice.classList.add(
+            'correct'
+          );
 
-  choice.classList.add(
-    'wrong'
-  );
+          choice.classList.add(
+            'locked'
+          );
 
-  choice.classList.remove(
-    'active'
-  );
+          choice.innerHTML =
+          `✅ ${text}`;
 
-  selected = selected.filter(
-    t => t !== text
-  );
+        }
 
-  choice.innerHTML =
-    `❌ ${text}`;
+      }else{
 
-}
+        wrongCount++;
 
-}
+        choice.classList.remove(
+          'active'
+        );
 
-    if(
-      selected.includes(text) &&
-      !correct.includes(text)
-    ){
+        choice.classList.add(
+          'wrong'
+        );
 
-      choice.classList.add(
-        'wrong'
-      );
+        choice.classList.add(
+          'locked'
+        );
 
-      choice.innerHTML =
-      `❌ ${text}`;
+        choice.innerHTML =
+        `❌ ${text}`;
+
+        selected =
+        selected.filter(
+          t => t !== text
+        );
+
+      }
 
     }
 
   });
 
-  const isCorrect =
+  const lockedCorrect =
 
-  selected.length === 3 &&
+  document.querySelectorAll(
+    '.choice.correct'
+  ).length;
 
-  selected.every(
-    t=>correct.includes(t)
-  );
-
-  if(isCorrect){
+  if(lockedCorrect === 3){
 
     result.innerHTML =
     '✅ Chính xác!';
 
-    submitBtn.style.display=
+    submitBtn.style.display =
     'none';
 
-    playAgainBtn.style.display=
+    playAgainBtn.style.display =
     'inline-block';
 
-  }else{
+    return;
+
+  }
+
+  if(wrongCount > 0){
 
     lives--;
 
@@ -1214,18 +1243,18 @@ submitBtn.onclick=()=>{
     result.innerHTML =
     '❌ Sai rồi, mất 1 tym 💔';
 
-    if(lives <= 0){
+  }
 
-      result.innerHTML =
-      '☠️ Hết tym';
+  if(lives <= 0){
 
-      submitBtn.style.display=
-      'none';
+    result.innerHTML =
+    '☠️ Hết tym';
 
-      playAgainBtn.style.display=
-      'inline-block';
+    submitBtn.style.display =
+    'none';
 
-    }
+    playAgainBtn.style.display =
+    'inline-block';
 
   }
 
